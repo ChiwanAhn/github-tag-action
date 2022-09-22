@@ -20,6 +20,9 @@ export default async function main() {
   const defaultPreReleaseBump = core.getInput('default_prerelease_bump') as
     | ReleaseType
     | 'false';
+  const customReleaseType = core.getInput('custom_relesae_type') as
+    | ReleaseType
+    | 'false';
   const tagPrefix = core.getInput('tag_prefix');
   const customTag = core.getInput('custom_tag');
   const releaseBranches = core.getInput('release_branches');
@@ -121,15 +124,17 @@ export default async function main() {
 
     commits = await getCommits(previousTag.commit.sha, commitRef);
 
-    let bump = await analyzeCommits(
-      {
-        releaseRules: mappedReleaseRules
-          ? // analyzeCommits doesn't appreciate rules with a section /shrug
-            mappedReleaseRules.map(({ section, ...rest }) => ({ ...rest }))
-          : undefined,
-      },
-      { commits, logger: { log: console.info.bind(console) } }
-    );
+    let bump: any =
+      customReleaseType ||
+      (await analyzeCommits(
+        {
+          releaseRules: mappedReleaseRules
+            ? // analyzeCommits doesn't appreciate rules with a section /shrug
+              mappedReleaseRules.map(({ section, ...rest }) => ({ ...rest }))
+            : undefined,
+        },
+        { commits, logger: { log: console.info.bind(console) } }
+      ));
 
     // Determine if we should continue with tag creation based on main vs prerelease branch
     let shouldContinue = true;
